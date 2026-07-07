@@ -1,0 +1,9 @@
+# Keep the Railway build context (COPY . /openemr) lean. These are either huge,
+# rebuilt at container startup by the flex entrypoint, or irrelevant at runtime.
+.git
+tmp
+node_modules
+**/node_modules
+vendor
+ccdaservice/node_modules
+.github

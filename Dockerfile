@@ -1,8 +1,10 @@
 # ============================================================================
 # Railway deploy Dockerfile for this OpenEMR fork
 # ============================================================================
-# Railway builds this from the GitHub repo on every push, so the image contains
-# this fork's exact committed source.
+# Railway builds this from the source uploaded by `railway up` (a checkout of
+# the canonical GitLab repo), so the image contains this fork's exact committed
+# source. Railway cannot link a self-hosted GitLab as a repo source, so deploys
+# are explicit CLI uploads rather than push-triggered rebuilds — see SETUP.md §3.
 #
 # Base is the official OpenEMR "flex" image. Flex normally *clones* OpenEMR
 # source at runtime, but that path assumes the git repo directory is named

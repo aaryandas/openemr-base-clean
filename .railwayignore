@@ -1,0 +1,8 @@
+# Controls what `railway up` uploads from the local checkout (supplements
+# .gitignore). Keep the upload identical to the committed tree: local working
+# material must never reach the build context.
+project-review/
+.git
+tmp
+node_modules
+vendor

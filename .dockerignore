@@ -1,5 +1,8 @@
 # Keep the Railway build context (COPY . /openemr) lean. These are either huge,
 # rebuilt at container startup by the flex entrypoint, or irrelevant at runtime.
+# project-review/ is local working material and must never be baked into the
+# (web-served) image.
+project-review
 .git
 tmp
 node_modules

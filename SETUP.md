@@ -4,7 +4,7 @@ This document records how this OpenEMR fork is run **locally** (with realistic
 sample patient data) and how it is **deployed to Railway**. It doubles as a map
 of the system's runtime dependencies.
 
-- **Fork:** `aaryandas/openemr-base-clean` (branch `main`)
+- **Canonical repo:** `ssh://git@labs.gauntletai.com:22022/aaryandas/openemr-agentforge-aaryan.git` (self-hosted GitLab, branch `main`)
 - **OpenEMR version:** 8.2.0-dev (upstream master import)
 - **Live Railway URL:** https://openemr-production-47c2.up.railway.app
 - **Default login:** `admin` / `pass`
@@ -147,8 +147,12 @@ finder lists the 14 sample patients.
 
 ## 3. Railway deployment
 
-The fork is deployed to Railway **straight from GitHub**: Railway is linked to
-the repo and rebuilds on every push.
+The fork is deployed to Railway **from a local checkout of the canonical GitLab
+repo via `railway up`**. Railway can link GitHub repos as a build source but not
+a self-hosted GitLab, so deploys are explicit CLI uploads: check out the GitLab
+repo, `railway up`, done. The upload respects [`.railwayignore`](./.railwayignore),
+so what ships is exactly the committed tree. (The service was originally linked
+to a GitHub mirror; that source connection has been removed.)
 
 ### 3.1 Architecture
 
@@ -156,7 +160,7 @@ Two Railway services in one project (`openemr-fork`):
 
 ```
 ┌─────────────────────────────┐        ┌───────────────────────────┐
-│  openemr  (from GitHub)     │  MySQL  │  MySQL  (Railway plugin)  │
+│  openemr  (railway up)      │  MySQL  │  MySQL  (Railway plugin)  │
 │  Dockerfile → flex image    │ ──────► │  mysql:9.4                │
 │  fork source baked in;      │  priv.  │  volume: /var/lib/mysql   │
 │  installs at first boot     │  net.   │                           │
@@ -175,16 +179,18 @@ asset build + a DB-install step) is not auto-detectable. So the repo commits a
 
 **Why source is baked, not cloned.** The flex image's runtime clone path is
 hard-coded to a git directory named `openemr` (it does `rsync openemr …` /
-`rm -fr openemr`). Cloning `github.com/aaryandas/openemr-base-clean.git` lands in
-`openemr-base-clean/`, so those commands miss and the entrypoint crashes under
-`set -euo pipefail`. The Dockerfile therefore **bakes the fork into `/openemr`**
-(`COPY . /openemr`) and sets `EASY_DEV_MODE_NEW=yes`, which makes flex use that
-local source instead of cloning. Because Railway rebuilds the image from the
-repo on each deploy, the running image always contains the fork's committed code.
+`rm -fr openemr`). Cloning any fork not named `openemr` (like this one) lands in
+a differently-named directory, so those commands miss and the entrypoint crashes
+under `set -euo pipefail`. The Dockerfile therefore **bakes the fork into
+`/openemr`** (`COPY . /openemr`) and sets `EASY_DEV_MODE_NEW=yes`, which makes
+flex use that local source instead of cloning. Because Railway rebuilds the
+image from the uploaded source on each `railway up`, the running image always
+contains the fork's committed code.
 
 Files added for the deploy:
 - [`Dockerfile`](./Dockerfile) — `FROM openemr/openemr:flex` (digest-pinned) + `COPY . /openemr` + `EASY_DEV_MODE_NEW=yes`, and `mkdir /couchdb/data` so a dev-only rsync in the entrypoint is a no-op on Railway
-- [`.dockerignore`](./.dockerignore) — keeps the build context lean (excludes `.git`, `vendor`, `node_modules`, `tmp`)
+- [`.dockerignore`](./.dockerignore) — keeps the build context lean (excludes `.git`, `vendor`, `node_modules`, `tmp`, `project-review`)
+- [`.railwayignore`](./.railwayignore) — keeps the `railway up` upload identical to the committed tree (excludes local working material)
 - [`railway.json`](./railway.json) — forces the Dockerfile builder
 
 ### 3.2 Reproduce the deploy (Railway CLI)
@@ -197,11 +203,11 @@ railway init --name openemr-fork
 # 1. Database
 railway add --database mysql          # provisions mysql:9.4 + a volume
 
-# 2. App service, linked to the GitHub fork, with DB + admin env wired in one
-#    shot. ${{MySQL.*}} are cross-service references resolved by Railway at
-#    deploy. (EASY_DEV_MODE_NEW is baked into the Dockerfile, not set here.)
+# 2. App service (empty — source arrives via `railway up` in step 5), with DB
+#    + admin env wired in one shot. ${{MySQL.*}} are cross-service references
+#    resolved by Railway at deploy. (EASY_DEV_MODE_NEW is baked into the
+#    Dockerfile, not set here.)
 railway add \
-  --repo aaryandas/openemr-base-clean --branch main \
   --service openemr \
   --variables 'MYSQL_HOST=${{MySQL.MYSQLHOST}}' \
   --variables 'MYSQL_PORT=${{MySQL.MYSQLPORT}}' \
@@ -222,10 +228,10 @@ railway volume add --mount-path /var/www/localhost/htdocs/openemr/sites
 #    (Railway terminates TLS at the edge).
 railway domain --service openemr --port 80
 
-# 5. Build + deploy the current commit. Railway does NOT auto-deploy on git
-#    push unless the Railway GitHub App is installed on the repo, so trigger
-#    an explicit rebuild from the configured GitHub source:
-railway redeploy --from-source --service openemr --yes
+# 5. Build + deploy the current checkout (must be a clean checkout of the
+#    GitLab repo's main). Railway cannot watch a self-hosted GitLab, so every
+#    deploy is this explicit upload:
+railway up --service openemr --ci -m "deploy <short description>"
 ```
 
 First boot runs rsync (baked source) → Composer build → npm/Webpack build → DB

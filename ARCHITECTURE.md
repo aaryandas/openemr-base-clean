@@ -417,7 +417,7 @@ Actual dev spend and measured production projections will be recorded in the sep
 
 Adapted from `AUDIT.md §6.3`:
 
-1. **Register the five behavioral-health forms, then seed.** `phq9`, `gad7`, `treatment_plan`, `aftercare_plan`, and `transfer_summary` are installable form modules — their tables are **not in the default schema** and are created only on registration (Administration → Forms). Then seed realistic PHP data in two tiers (clean demo charts + deliberately-broken eval fixtures, §9) and resolve the audit's profiling unknowns (`§6.4`).
+1. **Register the five behavioral-health forms, then seed.** `phq9`, `gad7`, `treatment_plan`, `aftercare_plan`, and `transfer_summary` are installable form modules — their tables are **not in the default schema** and are created only on registration (Administration → Forms). Then seed realistic PHP data in two tiers (clean demo charts + deliberately-broken eval fixtures, §9) and resolve the audit's profiling unknowns (`§6.4`). *Done: [`sql/php_demo_data.sql`](./sql/php_demo_data.sql) performs the registration and seeds both tiers (18-patient census, serial scores, multidisciplinary notes, broken fixtures) — loaded locally and on the live instance.*
 2. **Harden the shared API surface** (`SEC-1/2/3/4`) — useful regardless of the agent.
 3. **Stand up the compliance spine** (BAA gate, disclosure log, `llm-disclosure` event, tamper-evident audit) — *before* any model call.
 4. **Build the Co-Pilot Gateway** (batched scoped reader + DQ boundary + object-level authz); measure query count/latency on real charts.

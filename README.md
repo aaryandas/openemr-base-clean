@@ -18,6 +18,22 @@
 
 # OpenEMR
 
+> ## 🩺 This fork: AgentForge Clinical Co-Pilot (Gauntlet — Week 1)
+>
+> This fork is the foundation for a **Clinical Co-Pilot** — an AI agent for the
+> attending psychiatrist of an adult Partial Hospitalization Program, designed
+> *after* a full audit of this codebase and integrated through a purpose-built
+> compliance gateway rather than bolted onto the raw API surface.
+>
+> - **Live deployment:** https://openemr-production-47c2.up.railway.app *(demo data only; demo credentials and hardening notes in SETUP.md)*
+> - **[SETUP.md](SETUP.md)** — local development + Railway deployment guide
+> - **[AUDIT.md](AUDIT.md)** — full pre-build audit: security, performance, architecture, data quality, compliance (44 findings, code-cited)
+> - **[USERS.md](USERS.md)** — target user, workflow, and use cases (`USER.md` is a pointer to it)
+> - **[ARCHITECTURE.md](ARCHITECTURE.md)** — the AI integration plan: agent, verification gate, compliance spine, observability, evals
+> - **[CONTRACTS.md](CONTRACTS.md)** — typed API contracts for every edge of the agent dataflow
+>
+> Everything below this block is the upstream OpenEMR README.
+
 [OpenEMR](https://open-emr.org) is a Free and Open Source electronic health records and medical practice management application. It features fully integrated electronic health records, practice management, scheduling, electronic billing, internationalization, free support, a vibrant community, and a whole lot more. It runs on Windows, Linux, Mac OS X, and many other platforms.
 
 ### Contributing
